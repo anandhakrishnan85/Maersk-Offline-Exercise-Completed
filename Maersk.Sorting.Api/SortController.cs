@@ -32,24 +32,39 @@ namespace Maersk.Sorting.Api.Controllers
         }
 
         [HttpPost]
-        public Task<ActionResult<SortJob>> EnqueueJob(int[] values)
+        public ActionResult<SortJob> EnqueueJob(int[] values)
         {
-            // TODO: Should enqueue a job to be processed in the background.
-            throw new NotImplementedException();
+           
+            var pendingJob = new SortJob(
+               id: Guid.NewGuid(),
+               status: SortJobStatus.Pending,
+               duration: null,
+               input: values,
+               output: null);
+
+            _sortJobProcessor.Enqueue(pendingJob);
+
+            return Ok(pendingJob);
         }
 
         [HttpGet]
-        public Task<ActionResult<SortJob[]>> GetJobs()
+        public ActionResult<SortJob[]> GetJobs()
         {
-            // TODO: Should return all jobs that have been enqueued (both pending and completed).
-            throw new NotImplementedException();
+            return _sortJobProcessor.GetAllJobs();
         }
 
         [HttpGet("{jobId}")]
-        public Task<ActionResult<SortJob>> GetJob(Guid jobId)
+        public ActionResult<SortJob> GetJob(Guid jobId)
         {
-            // TODO: Should return a specific job by ID.
-            throw new NotImplementedException();
+            try
+            {
+                var job = _sortJobProcessor.GetJob(jobId);
+                return Ok(job);
+            }
+            catch (ArgumentException error)
+            {
+                return NotFound(error.Message);
+            }
         }
     }
 }
